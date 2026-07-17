@@ -530,4 +530,65 @@ function HomePage() {
               onKeyDown={(e) => e.key === "Enter" && onRunCustom()}
               placeholder="getprop ro.product.model"
               className="flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
-   
+   dir="ltr"
+            />
+            <button
+              onClick={onRunCustom}
+              disabled={!conn || busy}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              تنفيذ
+            </button>
+          </div>
+        </section>
+
+        {/* Log */}
+        <section className="rounded-lg border border-border bg-card p-4 lg:col-span-3">
+          <h2 className="mb-2 font-semibold">السجل</h2>
+          <div
+            ref={logRef}
+            dir="ltr"
+            className="h-72 overflow-auto rounded-md bg-muted p-2 font-mono text-xs"
+          >
+            {logs.length === 0 ? (
+              <div className="text-muted-foreground">لا توجد سجلات بعد.</div>
+            ) : (
+              logs.map((l, i) => (
+                <div
+                  key={i}
+                  className={
+                    l.kind === "err"
+                      ? "text-destructive"
+                      : l.kind === "ok"
+                        ? "text-green-600"
+                        : ""
+                  }
+                >
+                  <span className="text-muted-foreground">[{l.time}]</span>{" "}
+                  <span className="whitespace-pre-wrap">{l.text}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card p-4 lg:col-span-3">
+          <h2 className="mb-2 font-semibold">تعليمات مهمة</h2>
+          <ol className="list-inside list-decimal space-y-1 text-sm text-muted-foreground">
+            <li>يجب استخدام Chrome أو Edge على كمبيوتر (WebUSB لا يعمل على iOS).</li>
+            <li>
+              على شاشة السيارة/الجهاز: فعّل <b>Developer Options</b> ثم <b>USB debugging</b>.
+              لبعض شاشات AAOS: فعّل <b>ADB over USB</b> من قائمة المطور.
+            </li>
+            <li>وصّل كابل USB بين الكمبيوتر وشاشة السيارة، اضغط "توصيل جهاز USB" واختره.</li>
+            <li>عند أول اتصال ستظهر رسالة "Allow USB debugging?" على الشاشة — اقبلها.</li>
+            <li>
+              على ويندوز قد تحتاج تعريف <i>Google USB Driver</i> أو WinUSB عبر Zadig ليظهر
+              الجهاز في المتصفح.
+            </li>
+          </ol>
+        </section>
+      </main>
+    </div>
+  );
+}
