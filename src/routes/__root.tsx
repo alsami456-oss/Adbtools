@@ -87,7 +87,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "CarADB — إدارة سيارات أندرويد عبر ADB" },
       {
         property: "og:description",
-        content: "توصيل، تثبيت APK، ومنح الأذونات من المتصفح باستخدام WebUSB.",
         content: "أداة ويب لتوصيل شاشات السيارات (Android Auto / AAOS) عبر ADB، تثبيت حزم APK، ومنح الأذونات مباشرة من المتصفح.",
       },
       { property: "og:type", content: "website" },
