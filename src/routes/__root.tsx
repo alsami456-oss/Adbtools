@@ -88,9 +88,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content: "توصيل، تثبيت APK، ومنح الأذونات من المتصفح باستخدام WebUSB.",
+        content: "أداة ويب لتوصيل شاشات السيارات (Android Auto / AAOS) عبر ADB، تثبيت حزم APK، ومنح الأذونات مباشرة من المتصفح.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "CarADB — إدارة سيارات أندرويد عبر ADB" },
+      { name: "twitter:description", content: "أداة ويب لتوصيل شاشات السيارات (Android Auto / AAOS) عبر ADB، تثبيت حزم APK، ومنح الأذونات مباشرة من المتصفح." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/85e495b1-5291-4339-ba27-1d7d6fa66c56/id-preview-8e567352--77a3154c-fb7e-4397-ad41-0f2222f4ab78.lovable.app-1784289648781.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/85e495b1-5291-4339-ba27-1d7d6fa66c56/id-preview-8e567352--77a3154c-fb7e-4397-ad41-0f2222f4ab78.lovable.app-1784289648781.png" },
     ],
     links: [
       {
