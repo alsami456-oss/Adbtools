@@ -3,20 +3,30 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Adb } from "@yume-chan/adb";
 import type { AdbDaemonWebUsbDevice } from "@yume-chan/adb-daemon-webusb";
 import {
+  Usb,
+  Plug,
+  PlugZap,
+  Upload,
+  Package,
+  RefreshCw,
+  Search,
+  Trash2,
+  ShieldCheck,
+  ShieldX,
+  Zap,
+  Layers,
+  Plus,
+  Play,
+  Terminal,
+  ScrollText,
+  Info,
+  CheckCircle2,
+  XCircle,
+  Car,
+  Loader2,
+} from "lucide-react";
+import {
   COMMON_PERMISSIONS,
-  connect,
-  grantAllPermissions,
-  grantPermission,
-  installApk,
-  isWebUsbSupported,
-  listInstalledPackages,
-  requestDevice,
-  revokePermission,
-  runShell,
-  uninstallPackage,
-  type AdbConnection,
-} from "@/lib/adb-client";
-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -261,34 +271,47 @@ function HomePage() {
   const filteredPkgs = packages.filter((p) => p.includes(pkgSearch.toLowerCase()));
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border">
+    <div dir="rtl" className="min-h-screen text-foreground">
+      <header className="sticky top-0 z-20 border-b border-white/10 backdrop-blur-xl bg-background/40">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div>
-            <h1 className="text-xl font-bold">CarADB</h1>
-            <p className="text-xs text-muted-foreground">
-              إدارة شاشات السيارات (Android Auto / AAOS) عبر ADB مباشرة من المتصفح
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-xl btn-glow">
+              <Car className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-xl font-extrabold tracking-tight">
+                <span className="gradient-text">CarADB</span>
+              </h1>
+              <p className="text-[11px] text-muted-foreground">
+                إدارة شاشات السيارات (Android Auto / AAOS) عبر ADB من المتصفح
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {conn ? (
               <>
-                <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs text-green-600">
-                  متصل: {conn.device.serial}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">
+                  <PlugZap className="h-3.5 w-3.5" />
+                  {conn.device.serial}
                 </span>
                 <button
                   onClick={doDisconnect}
-                  className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-accent"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm hover:bg-white/10"
                 >
-                  قطع الاتصال
+                  <XCircle className="h-4 w-4" /> قطع
                 </button>
               </>
             ) : (
               <button
                 onClick={doConnect}
                 disabled={!supported || connecting}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
+                className="btn-glow btn-glow-hover inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+                >
+                {connecting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Usb className="h-4 w-4" />
+                )}
                 {connecting ? "جاري الاتصال…" : "توصيل جهاز USB"}
               </button>
             )}
@@ -297,21 +320,27 @@ function HomePage() {
       </header>
 
       {!supported && (
-        <div className="mx-auto mt-4 max-w-6xl rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="mx-auto mt-4 flex max-w-6xl items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <XCircle className="h-4 w-4" />
           متصفحك لا يدعم WebUSB. استخدم Chrome أو Edge على كمبيوتر (سطح مكتب).
         </div>
       )}
 
       <main className="mx-auto grid max-w-6xl gap-4 p-4 lg:grid-cols-3">
         {/* Install */}
-        <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-2 font-semibold">تثبيت حزم APK</h2>
+        <section className="glass-card rounded-2xl p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/15 text-primary">
+              <Upload className="h-4.5 w-4.5" />
+            </div>
+            <h2 className="font-semibold">تثبيت حزم APK</h2>
+          </div>
           <p className="mb-3 text-xs text-muted-foreground">
-            يمكن اختيار حزمة كاملة (عدة APK). سيتم رفعها للجهاز وتشغيل <code>pm install</code>.
+            اختر ملف أو أكثر — سيتم رفعها وتشغيل <code className="rounded bg-white/10 px-1">pm install</code>.
           </p>
           <label
-            className={`flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-input px-4 py-8 text-center text-sm hover:bg-accent ${
-              !conn ? "pointer-events-none opacity-50" : ""
+            className={`group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-white/15 bg-white/5 px-4 py-8 text-center text-sm transition hover:border-primary/50 hover:bg-primary/5 ${
+            !conn ? "pointer-events-none opacity-50" : ""
             }`}
           >
             <input
@@ -321,8 +350,9 @@ function HomePage() {
               className="hidden"
               onChange={(e) => onInstall(e.target.files)}
             />
-            <span className="font-medium">اسحب ملفات APK هنا أو اضغط للاختيار</span>
-            <span className="mt-1 text-xs text-muted-foreground">يدعم اختيار متعدد</span>
+            <Upload className="mb-2 h-6 w-6 text-primary transition group-hover:scale-110" />
+            <span className="font-medium">اسحب ملفات APK أو اضغط للاختيار</span>
+            <span className="mt-1 text-xs text-muted-foreground">اختيار متعدد مدعوم</span>
           </label>
           {progress && (
             <div className="mt-3">
@@ -330,10 +360,14 @@ function HomePage() {
                 <span className="truncate">{progress.name}</span>
                 <span>{progress.pct}%</span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div className="h-2 overflow-hidden rounded-full bg-white/10">
                 <div
-                  className="h-full bg-primary transition-all"
-                  style={{ width: `${progress.pct}%` }}
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${progress.pct}%`,
+                    background: "var(--gradient-primary)",
+                  }}
+                  }
                 />
               </div>
             </div>
@@ -341,14 +375,20 @@ function HomePage() {
         </section>
 
         {/* Packages */}
-        <section className="rounded-lg border border-border bg-card p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="font-semibold">الحزم المثبتة</h2>
+        <section className="glass-card rounded-2xl p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-accent/15 text-accent">
+                <Package className="h-4.5 w-4.5" />
+              </div>
+              <h2 className="font-semibold">الحزم المثبتة</h2>
+            </div>
             <button
               disabled={!conn || busy}
               onClick={() => conn && refreshPackages(conn.adb)}
-              className="rounded-md border border-input px-2 py-1 text-xs hover:bg-accent disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-xs hover:bg-white/10 disabled:opacity-50"
             >
+              <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
               تحديث
             </button>
           </div>
@@ -360,31 +400,34 @@ function HomePage() {
                   setPkgFilter(f);
                   if (conn) refreshPackages(conn.adb, f);
                 }}
-                className={`rounded-md px-2 py-1 ${
+                className={`rounded-lg px-2.5 py-1 transition ${
                   pkgFilter === f
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-input hover:bg-accent"
+                    ? "btn-glow text-primary-foreground"
+                    : "border border-white/10 bg-white/5 hover:bg-white/10"
                 }`}
               >
                 {f === "third-party" ? "طرف ثالث" : f === "system" ? "نظام" : "الكل"}
               </button>
             ))}
           </div>
-          <input
-            type="text"
-            placeholder="ابحث…"
-            value={pkgSearch}
-            onChange={(e) => setPkgSearch(e.target.value)}
-            className="mb-2 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-          />
+          <div className="relative mb-2">
+            <Search className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="ابحث…"
+              value={pkgSearch}
+              onChange={(e) => setPkgSearch(e.target.value)}
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 pr-7 text-sm outline-none focus:border-primary/50"
+            />
+          </div>
           <select
             size={8}
             value={selectedPkg}
             onChange={(e) => setSelectedPkg(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-2 py-1 font-mono text-xs"
+            className="w-full rounded-lg border border-white/10 bg-black/30 px-2 py-1 font-mono text-xs outline-none focus:border-primary/50"
           >
             {filteredPkgs.map((p) => (
-              <option key={p} value={p}>
+              <option key={p} value={p} className="bg-background">
                 {p}
               </option>
             ))}
@@ -395,30 +438,36 @@ function HomePage() {
           <button
             onClick={onUninstall}
             disabled={!conn || !selectedPkg || busy}
-            className="mt-2 w-full rounded-md border border-destructive/30 px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
+            className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-destructive/40 bg-destructive/10 px-2 py-1.5 text-xs text-destructive hover:bg-destructive/20 disabled:opacity-50"
           >
+            <Trash2 className="h-3.5 w-3.5" />
             إلغاء تثبيت الحزمة المحددة
           </button>
         </section>
 
         {/* Permissions */}
-        <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-2 font-semibold">الأذونات</h2>
+        <section className="glass-card rounded-2xl p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-400/15 text-emerald-300">
+              <ShieldCheck className="h-4.5 w-4.5" />
+            </div>
+            <h2 className="font-semibold">الأذونات</h2>
+          </div>
           <label className="mb-1 block text-xs text-muted-foreground">الحزمة المستهدفة</label>
           <input
             value={selectedPkg}
             onChange={(e) => setSelectedPkg(e.target.value)}
             placeholder="com.example.app"
-            className="mb-2 w-full rounded-md border border-input bg-background px-2 py-1.5 font-mono text-xs"
-          />
+            className="mb-2 w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 font-mono text-xs outline-none focus:border-primary/50"
+            />
           <label className="mb-1 block text-xs text-muted-foreground">الإذن</label>
           <select
             value={permission}
             onChange={(e) => setPermission(e.target.value)}
-            className="mb-2 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs"
-          >
+            className="mb-2 w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs outline-none focus:border-primary/50"
+            >
             {COMMON_PERMISSIONS.map((p) => (
-              <option key={p} value={p}>
+              <option key={p} value={p} className="bg-background">
                 {p.replace("android.permission.", "")}
               </option>
             ))}
@@ -426,43 +475,50 @@ function HomePage() {
           <input
             value={permission}
             onChange={(e) => setPermission(e.target.value)}
-            className="mb-2 w-full rounded-md border border-input bg-background px-2 py-1.5 font-mono text-xs"
-          />
+            className="mb-2 w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 font-mono text-xs outline-none focus:border-primary/50"
+            />
           <div className="flex gap-2">
             <button
               onClick={onGrant}
               disabled={!conn || !selectedPkg || busy}
-              className="flex-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              منح
+              className="btn-glow btn-glow-hover inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              >
+              <ShieldCheck className="h-4 w-4" /> منح
             </button>
             <button
               onClick={onRevoke}
               disabled={!conn || !selectedPkg || busy}
-              className="flex-1 rounded-md border border-input px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-50"
-            >
-              سحب
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm hover:bg-white/10 disabled:opacity-50"
+              >
+              <ShieldX className="h-4 w-4" /> سحب
             </button>
           </div>
           <button
             onClick={onGrantAll}
             disabled={!conn || !selectedPkg || busy}
-            className="mt-2 w-full rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            ⚡ منح جميع الأذونات دفعة واحدة
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 disabled:opacity-50"
+            style={{ background: "linear-gradient(135deg, oklch(0.68 0.19 155), oklch(0.72 0.19 195))" }}
+            >
+            <Zap className="h-4 w-4" />
+            منح جميع الأذونات دفعة واحدة
           </button>
-          <p className="mt-1 text-[11px] text-muted-foreground">
-            يقرأ الأذونات المطلوبة من manifest التطبيق ويمنحها كلها.
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            يقرأ الأذونات من manifest التطبيق ويمنحها كلها.
           </p>
         </section>
 
         {/* App Bundle */}
-        <section className="rounded-lg border border-border bg-card p-4 lg:col-span-3">
-          <div className="mb-2 flex items-center justify-between">
-            <h2 className="font-semibold">حزمة تطبيقات — تثبيت تلقائي</h2>
-            <div className="flex gap-2">
-              <label className="cursor-pointer rounded-md border border-input px-3 py-1.5 text-xs hover:bg-accent">
-                <input
+        <section className="glass-card rounded-2xl p-5 lg:col-span-3">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-accent/15 text-accent">
+                <Layers className="h-4.5 w-4.5" />
+              </div>
+              <h2 className="font-semibold">حزمة تطبيقات — تثبيت تلقائي</h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10">
+        <input
                   type="file"
                   accept=".apk,application/vnd.android.package-archive"
                   multiple
@@ -472,45 +528,49 @@ function HomePage() {
                     e.currentTarget.value = "";
                   }}
                 />
-                + إضافة APK للحزمة
+                <Plus className="h-3.5 w-3.5" /> إضافة APK
               </label>
               <button
                 onClick={() => setBundle([])}
                 disabled={bundle.length === 0 || bundleRunning}
-                className="rounded-md border border-input px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
-              >
-                مسح
+                className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 disabled:opacity-50"
+                >
+                <Trash2 className="h-3.5 w-3.5" /> مسح
               </button>
               <button
                 onClick={onInstallBundle}
                 disabled={!conn || bundle.length === 0 || bundleRunning}
-                className="rounded-md bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-              >
+                className="btn-glow btn-glow-hover inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-50"
+                >
+                {bundleRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
                 {bundleRunning ? "جاري التثبيت…" : `تثبيت الكل (${bundle.length})`}
               </button>
             </div>
           </div>
           {bundle.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="rounded-xl border border-dashed border-white/10 bg-white/5 px-4 py-6 text-center text-xs text-muted-foreground">
               أضف ملفات APK لتكوين حزمتك، ثم اضغط "تثبيت الكل" لتثبيتها واحداً تلو الآخر تلقائياً.
             </p>
           ) : (
-            <ul className="divide-y divide-border rounded-md border border-border">
-              {bundle.map((f, i) => (
+            <ul className="divide-y divide-white/5 rounded-xl border border-white/10 bg-white/5">
+      {bundle.map((f, i) => (
                 <li key={f.name + i} className="flex items-center justify-between px-3 py-2 text-xs">
-                  <span className="truncate font-mono">
-                    {i + 1}. {f.name}
+                  <span className="flex min-w-0 items-center gap-2 truncate font-mono">
+                    <span className="grid h-5 w-5 flex-none place-items-center rounded bg-primary/20 text-[10px] text-primary">
+                      {i + 1}
+                    </span>
+                    <span className="truncate">{f.name}</span>
                   </span>
-                  <span className="flex items-center gap-2">
+                  <span className="flex flex-none items-center gap-2">
                     <span className="text-muted-foreground">
                       {(f.size / 1024 / 1024).toFixed(1)}MB
                     </span>
                     <button
                       onClick={() => setBundle((b) => b.filter((_, j) => j !== i))}
                       disabled={bundleRunning}
-                      className="text-destructive hover:underline disabled:opacity-50"
-                    >
-                      حذف
+                      className="inline-flex items-center gap-1 text-destructive hover:underline disabled:opacity-50"
+                      >
+                      <Trash2 className="h-3 w-3" />
                     </button>
                   </span>
                 </li>
@@ -519,52 +579,72 @@ function HomePage() {
           )}
         </section>
 
-
         {/* Custom shell */}
-        <section className="rounded-lg border border-border bg-card p-4 lg:col-span-3">
-          <h2 className="mb-2 font-semibold">أمر shell مخصص</h2>
+        <section className="glass-card rounded-2xl p-5 lg:col-span-3">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/15 text-primary">
+              <Terminal className="h-4.5 w-4.5" />
+            </div>
+            <h2 className="font-semibold">أمر shell مخصص</h2>
+          </div>
           <div className="flex gap-2">
-            <input
-              value={customCmd}
-              onChange={(e) => setCustomCmd(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onRunCustom()}
-              placeholder="getprop ro.product.model"
-              className="flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
-   dir="ltr"
-            />
+            <div className="relative flex-1">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-sm text-primary">$</span>
+              <input
+                value={customCmd}
+                onChange={(e) => setCustomCmd(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && onRunCustom()}
+                placeholder="getprop ro.product.model"
+                className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 pl-6 font-mono text-sm outline-none focus:border-primary/50"
+                dir="ltr"
+              />
+            </div>
             <button
               onClick={onRunCustom}
               disabled={!conn || busy}
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              تنفيذ
+              className="btn-glow btn-glow-hover inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              >
+              <Play className="h-4 w-4" /> تنفيذ
             </button>
           </div>
         </section>
 
         {/* Log */}
-        <section className="rounded-lg border border-border bg-card p-4 lg:col-span-3">
-          <h2 className="mb-2 font-semibold">السجل</h2>
+        <section className="glass-card rounded-2xl p-5 lg:col-span-3">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-accent/15 text-accent">
+              <ScrollText className="h-4.5 w-4.5" />
+            </div>
+            <h2 className="font-semibold">السجل</h2>
+          </div>
           <div
             ref={logRef}
             dir="ltr"
-            className="h-72 overflow-auto rounded-md bg-muted p-2 font-mono text-xs"
-          >
+            className="h-72 overflow-auto rounded-xl border border-white/10 bg-black/40 p-3 font-mono text-xs"
+            >
             {logs.length === 0 ? (
               <div className="text-muted-foreground">لا توجد سجلات بعد.</div>
             ) : (
               logs.map((l, i) => (
                 <div
                   key={i}
-                  className={
+                  className={`flex items-start gap-1.5 ${
                     l.kind === "err"
                       ? "text-destructive"
                       : l.kind === "ok"
-                        ? "text-green-600"
-                        : ""
-                  }
+                        
+                        ? "text-emerald-300"
+                        : "text-foreground/80"
+                  }`}
                 >
-                  <span className="text-muted-foreground">[{l.time}]</span>{" "}
+                  {l.kind === "err" ? (
+                    <XCircle className="mt-0.5 h-3 w-3 flex-none" />
+                  ) : l.kind === "ok" ? (
+                    <CheckCircle2 className="mt-0.5 h-3 w-3 flex-none" />
+                  ) : (
+                    <Info className="mt-0.5 h-3 w-3 flex-none opacity-60" />
+                  )}
+                  <span className="text-muted-foreground">[{l.time}]</span>
                   <span className="whitespace-pre-wrap">{l.text}</span>
                 </div>
               ))
@@ -572,19 +652,23 @@ function HomePage() {
           </div>
         </section>
 
-        <section className="rounded-lg border border-border bg-card p-4 lg:col-span-3">
-          <h2 className="mb-2 font-semibold">تعليمات مهمة</h2>
-          <ol className="list-inside list-decimal space-y-1 text-sm text-muted-foreground">
+        <section className="glass-card rounded-2xl p-5 lg:col-span-3">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-primary/15 text-primary">
+              <Plug className="h-4.5 w-4.5" />
+            </div>
+            <h2 className="font-semibold">تعليمات مهمة</h2>
+          </div>
+          <ol className="list-inside list-decimal space-y-1.5 text-sm text-muted-foreground marker:text-primary">
             <li>يجب استخدام Chrome أو Edge على كمبيوتر (WebUSB لا يعمل على iOS).</li>
             <li>
-              على شاشة السيارة/الجهاز: فعّل <b>Developer Options</b> ثم <b>USB debugging</b>.
-              لبعض شاشات AAOS: فعّل <b>ADB over USB</b> من قائمة المطور.
+              على شاشة السيارة/الجهاز: فعّل <b className="text-foreground">Developer Options</b> ثم <b className="text-foreground">USB debugging</b>.
+              لبعض شاشات AAOS: فعّل <b className="text-foreground">ADB over USB</b> من قائمة المطور.
             </li>
             <li>وصّل كابل USB بين الكمبيوتر وشاشة السيارة، اضغط "توصيل جهاز USB" واختره.</li>
             <li>عند أول اتصال ستظهر رسالة "Allow USB debugging?" على الشاشة — اقبلها.</li>
             <li>
-              على ويندوز قد تحتاج تعريف <i>Google USB Driver</i> أو WinUSB عبر Zadig ليظهر
-              الجهاز في المتصفح.
+              على ويندوز قد تحتاج تعريف <i className="text-foreground">Google USB Driver</i> أو WinUSB عبر Zadig ليظهر الجهاز في المتصفح.
             </li>
           </ol>
         </section>
