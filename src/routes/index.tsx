@@ -3,16 +3,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Adb } from "@yume-chan/adb";
 import type { AdbDaemonWebUsbDevice } from "@yume-chan/adb-daemon-webusb";
 import { 
-  Usb, 
-  Settings, 
-  MessageSquare, 
-  FolderDown, 
-  RefreshCw, 
-  Github,
-  Send,
-  Trash2,
-  Play
-} from 'lucide-react';
+  UsbIcon, 
+  SettingsIcon, 
+  FolderDownIcon, 
+  TrashIcon, 
+  TelegramIcon, 
+  GithubIcon, 
+  PlayIcon 
+} from "../components/Icons";
 import {
   COMMON_PERMISSIONS,
   connect,
@@ -337,7 +335,7 @@ function HomePage() {
                 disabled={!supported || connecting}
                 className="flex items-center gap-2 rounded-xl bg-[#2563eb] hover:bg-blue-600 transition-colors px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-900/30 disabled:opacity-50"
               >
-                <Usb className="w-4 h-4" />
+                <UsbIcon className="w-4 h-4" />
                 {connecting ? "جاري الاتصال…" : "توصيل جهاز USB"}
               </button>
             )}
@@ -349,7 +347,7 @@ function HomePage() {
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-[#10b981] hover:bg-[#059669] text-slate-950 transition-colors px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-[#10b981]/20"
             >
-              <MessageSquare className="w-4 h-4" />
+              <TelegramIcon className="w-4 h-4" />
               الدعم الفني تيليجرام
             </a>
           </div>
@@ -368,7 +366,7 @@ function HomePage() {
         <section className="rounded-2xl border border-slate-800 bg-[#0b1329] p-5 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#10b981]/5 rounded-full blur-2xl" />
           <div className="flex items-center gap-2 mb-2 text-[#10b981]">
-            <FolderDown className="w-5 h-5" />
+            <FolderDownIcon className="w-5 h-5" />
             <h2 className="font-bold text-lg">تثبيت حزم APK المباشر</h2>
           </div>
           <p className="mb-4 text-xs text-slate-400 leading-relaxed">
@@ -581,7 +579,7 @@ function HomePage() {
                       disabled={bundleRunning}
                       className="text-rose-400 hover:text-rose-300 transition-colors"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <TrashIcon className="w-4 h-4" />
                     </button>
                   </span>
                 </li>
@@ -593,7 +591,7 @@ function HomePage() {
         {/* قسم إدارة أذونات النظام السريعة بنقرة واحدة */}
         <section className="bg-[#0b1329] border border-slate-800 rounded-2xl p-5 shadow-xl lg:col-span-3">
           <div className="flex items-center gap-2 mb-2 text-[#10b981]">
-            <Settings className="w-5 h-5" />
+            <SettingsIcon className="w-5 h-5" />
             <h2 className="text-lg font-bold">🛠️ إدارة أذونات النظام والأوامر السريعة</h2>
           </div>
           <p className="text-xs text-slate-400 mb-5 leading-relaxed">
@@ -607,7 +605,7 @@ function HomePage() {
               className="flex flex-col items-start p-4 bg-[#070d1e] hover:bg-[#091124] hover:border-[#10b981]/30 border border-slate-800 rounded-xl text-right transition-all group disabled:opacity-50"
             >
               <span className="text-sm font-bold text-slate-200 group-hover:text-white flex items-center gap-2">
-                <Play className="w-3.5 h-3.5 text-[#10b981]" />
+                <PlayIcon className="w-3.5 h-3.5 text-[#10b981]" />
                 منح صلاحيات الذاكرة للتطبيق المختار
               </span>
               <span className="text-[10px] text-slate-500 mt-1">Storage Permission (WRITE/READ_EXTERNAL_STORAGE)</span>
@@ -619,7 +617,7 @@ function HomePage() {
               className="flex flex-col items-start p-4 bg-[#070d1e] hover:bg-[#091124] hover:border-yellow-500/30 border border-slate-800 rounded-xl text-right transition-all group disabled:opacity-50"
             >
               <span className="text-sm font-bold text-slate-200 group-hover:text-white flex items-center gap-2">
-                <Play className="w-3.5 h-3.5 text-yellow-500" />
+                <PlayIcon className="w-3.5 h-3.5 text-yellow-500" />
                 إعادة تشغيل واجهة السيارة (Force Stop)
               </span>
               <span className="text-[10px] text-slate-500 mt-1">لإصلاح تعليق الشاشة أو إعادة تحميل التطبيقات الافتراضية</span>
@@ -718,7 +716,7 @@ function HomePage() {
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 border border-slate-700 px-5 py-2.5 rounded-xl text-xs font-bold transition-all"
             >
-              <Github className="w-4 h-4" />
+              <GithubIcon className="w-4 h-4" />
               مستودعي على جيت هوب
             </a>
           </div>
