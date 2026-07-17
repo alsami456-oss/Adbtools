@@ -15,7 +15,7 @@ import {
   runShell,
   uninstallPackage,
   type AdbConnection,
-} from "../lib/adb-client";
+} from "@/lib/adb-client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -258,62 +258,27 @@ function HomePage() {
     }
   };
 
-  const onGrantStoragePermission = async () => {
-    if (!conn || !selectedPkg) {
-      log("الرجاء اختيار حزمة أولاً لتطبيق الأمر عليها.", "info");
-      return;
-    }
-    setBusy(true);
-    try {
-      log(`جاري منح صلاحيات الذاكرة للتطبيق: ${selectedPkg}...`);
-      await runShell(conn.adb, `pm grant ${selectedPkg} android.permission.WRITE_EXTERNAL_STORAGE`);
-      await runShell(conn.adb, `pm grant ${selectedPkg} android.permission.READ_EXTERNAL_STORAGE`);
-      log(`تم منح صلاحيات القراءة والكتابة للذاكرة بنجاح!`, "ok");
-    } catch (e) {
-      log(`فشل تطبيق الأمر: ${(e as Error).message}`, "err");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const onForceStopLauncher = async () => {
-    if (!conn) return;
-    setBusy(true);
-    try {
-      log(`جاري إعادة تشغيل واجهة السيارة...`);
-      await runShell(conn.adb, `am force-stop ${selectedPkg || "com.carlauncher.pro"}`);
-      log(`تم إرسال أمر إيقاف وتشغيل الواجهة بنجاح.`, "ok");
-    } catch (e) {
-      log(`فشل تطبيق الأمر: ${(e as Error).message}`, "err");
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const filteredPkgs = packages.filter((p) => p.includes(pkgSearch.toLowerCase()));
 
   return (
-    <div dir="rtl" className="min-h-screen bg-[#060b19] text-slate-100 font-sans antialiased pb-12" style={{ direction: 'rtl' }}>
-
-      {/* الهيدر العلوي */}
-      <header className="border-b border-slate-800 bg-[#070d1e]/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 flex-col sm:flex-row gap-4">
-          <div className="text-right">
-            <h1 className="text-2xl font-bold text-[#10b981]">منصة برمجة شاشات السيارات</h1>
-            <p className="text-xs text-slate-400 mt-1">
-              متوافق بالكامل مع شاشات السيارات الذكية
+    <div dir="rtl" className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+          <div>
+            <h1 className="text-xl font-bold">CarADB</h1>
+            <p className="text-xs text-muted-foreground">
+              إدارة شاشات السيارات (Android Auto / AAOS) عبر ADB مباشرة من المتصفح
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {conn ? (
               <>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="rounded-full bg-green-500/10 px-3 py-1 text-xs text-green-600">
                   متصل: {conn.device.serial}
                 </span>
                 <button
                   onClick={doDisconnect}
-                  className="rounded-xl border border-rose-500/30 text-rose-400 px-4 py-2 text-sm font-medium hover:bg-rose-500/10 transition-colors"
+                  className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-accent"
                 >
                   قطع الاتصال
                 </button>
@@ -322,45 +287,31 @@ function HomePage() {
               <button
                 onClick={doConnect}
                 disabled={!supported || connecting}
-                className="flex items-center gap-2 rounded-xl bg-[#2563eb] hover:bg-blue-600 transition-colors px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-900/30 disabled:opacity-50"
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
-                🔌 {connecting ? "جاري الاتصال…" : "توصيل جهاز USB"}
+                {connecting ? "جاري الاتصال…" : "توصيل جهاز USB"}
               </button>
             )}
-
-            <a 
-              href="https://t.me/SAM_T2"
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-[#10b981] hover:bg-[#059669] text-slate-950 transition-colors px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-[#10b981]/20"
-            >
-              💬 الدعم الفني تيليجرام
-            </a>
           </div>
         </div>
       </header>
 
       {!supported && (
-        <div className="mx-auto mt-4 max-w-6xl rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-400 text-center">
-          ⚠️ متصفحك لا يدعم WebUSB. استخدم Chrome أو Edge على كمبيوتر (سطح مكتب).
+        <div className="mx-auto mt-4 max-w-6xl rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          متصفحك لا يدعم WebUSB. استخدم Chrome أو Edge على كمبيوتر (سطح مكتب).
         </div>
       )}
 
-      <main className="mx-auto grid max-w-6xl gap-6 p-4 lg:grid-cols-3 mt-6">
-
-        {/* قسم تثبيت حزم APK */}
-        <section className="rounded-2xl border border-slate-800 bg-[#0b1329] p-5 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-[#10b981]/5 rounded-full blur-2xl" />
-          <div className="flex items-center gap-2 mb-2 text-[#10b981]">
-            <span className="text-xl">📥</span>
-            <h2 className="font-bold text-lg">تثبيت حزم APK المباشر</h2>
-          </div>
-          <p className="mb-4 text-xs text-slate-400 leading-relaxed">
-            يمكن اختيار حزمة كاملة (عدة APK). سيتم رفعها للجهاز وتشغيل التثبيت التلقائي في شاشتك.
+      <main className="mx-auto grid max-w-6xl gap-4 p-4 lg:grid-cols-3">
+        {/* Install */}
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="mb-2 font-semibold">تثبيت حزم APK</h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            يمكن اختيار حزمة كاملة (عدة APK). سيتم رفعها للجهاز وتشغيل <code>pm install</code>.
           </p>
           <label
-            className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-800 hover:border-[#10b981]/50 bg-[#070d1e] px-4 py-10 text-center text-sm transition-all hover:bg-[#070d1e]/80 ${
-              !conn ? "pointer-events-none opacity-40" : ""
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-input px-4 py-8 text-center text-sm hover:bg-accent ${
+              !conn ? "pointer-events-none opacity-50" : ""
             }`}
           >
             <input
@@ -370,18 +321,18 @@ function HomePage() {
               className="hidden"
               onChange={(e) => onInstall(e.target.files)}
             />
-            <span className="font-bold text-slate-300">اسحب ملفات APK هنا أو اضغط للاختيار</span>
-            <span className="mt-1.5 text-xs text-slate-500">يدعم اختيار متعدد لتوفير وقتك</span>
+            <span className="font-medium">اسحب ملفات APK هنا أو اضغط للاختيار</span>
+            <span className="mt-1 text-xs text-muted-foreground">يدعم اختيار متعدد</span>
           </label>
           {progress && (
-            <div className="mt-4 bg-[#070d1e] p-3 rounded-xl border border-slate-800">
-              <div className="mb-2 flex justify-between text-xs">
-                <span className="truncate font-mono text-slate-300">{progress.name}</span>
-                <span className="font-bold text-[#10b981]">{progress.pct}%</span>
+            <div className="mt-3">
+              <div className="mb-1 flex justify-between text-xs">
+                <span className="truncate">{progress.name}</span>
+                <span>{progress.pct}%</span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full bg-[#10b981] transition-all"
+                  className="h-full bg-primary transition-all"
                   style={{ width: `${progress.pct}%` }}
                 />
               </div>
@@ -389,19 +340,19 @@ function HomePage() {
           )}
         </section>
 
-        {/* قسم الحزم المثبتة في السيارة */}
-        <section className="rounded-2xl border border-slate-800 bg-[#0b1329] p-5 shadow-xl">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-bold text-lg text-slate-200">📱 الحزم المثبتة بالسيارة</h2>
+        {/* Packages */}
+        <section className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-semibold">الحزم المثبتة</h2>
             <button
               disabled={!conn || busy}
               onClick={() => conn && refreshPackages(conn.adb)}
-              className="rounded-lg border border-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-[#070d1e] hover:border-slate-700 transition-all disabled:opacity-50"
+              className="rounded-md border border-input px-2 py-1 text-xs hover:bg-accent disabled:opacity-50"
             >
-              🔄 تحديث القائمة
+              تحديث
             </button>
           </div>
-          <div className="mb-3 flex gap-1.5 text-xs">
+          <div className="mb-2 flex gap-1 text-xs">
             {(["third-party", "system", "all"] as const).map((f) => (
               <button
                 key={f}
@@ -409,65 +360,62 @@ function HomePage() {
                   setPkgFilter(f);
                   if (conn) refreshPackages(conn.adb, f);
                 }}
-                className={`flex-1 rounded-lg py-1.5 text-center font-semibold transition-all ${
+                className={`rounded-md px-2 py-1 ${
                   pkgFilter === f
-                    ? "bg-[#10b981] text-slate-950"
-                    : "bg-[#070d1e] text-slate-400 border border-slate-800 hover:border-slate-700"
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-input hover:bg-accent"
                 }`}
               >
-                {f === "third-party" ? "طرف ثالث" : f === "system" ? "النظام" : "الكل"}
+                {f === "third-party" ? "طرف ثالث" : f === "system" ? "نظام" : "الكل"}
               </button>
             ))}
           </div>
           <input
             type="text"
-            placeholder="ابحث عن تطبيق معين..."
+            placeholder="ابحث…"
             value={pkgSearch}
             onChange={(e) => setPkgSearch(e.target.value)}
-            className="mb-3 w-full rounded-xl border border-slate-800 bg-[#070d1e] px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-[#10b981]/50"
+            className="mb-2 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
           />
           <select
             size={8}
             value={selectedPkg}
             onChange={(e) => setSelectedPkg(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-[#070d1e] p-2 font-mono text-xs text-slate-300 focus:outline-none focus:border-[#10b981]/50"
+            className="w-full rounded-md border border-input bg-background px-2 py-1 font-mono text-xs"
           >
             {filteredPkgs.map((p) => (
-              <option key={p} value={p} className="py-1">
+              <option key={p} value={p}>
                 {p}
               </option>
             ))}
           </select>
-          <div className="mt-2.5 flex justify-between items-center text-xs text-slate-500">
-            <span>المعروض: {filteredPkgs.length} من أصل {packages.length}</span>
+          <div className="mt-2 text-xs text-muted-foreground">
+            {filteredPkgs.length} / {packages.length}
           </div>
           <button
             onClick={onUninstall}
             disabled={!conn || !selectedPkg || busy}
-            className="mt-3 w-full rounded-xl border border-rose-900/30 bg-rose-950/20 px-3 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-950/40 transition-all disabled:opacity-50"
+            className="mt-2 w-full rounded-md border border-destructive/30 px-2 py-1.5 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
           >
-            ❌ إلغاء تثبيت الحزمة المحددة نهائياً
+            إلغاء تثبيت الحزمة المحددة
           </button>
         </section>
 
-        {/* قسم إدارة أذونات النظام والأكواد */}
-        <section className="rounded-2xl border border-slate-800 bg-[#0b1329] p-5 shadow-xl">
-          <div className="flex items-center gap-2 mb-3 text-yellow-500">
-            <span className="text-xl">⚙️</span>
-            <h2 className="font-bold text-lg">الأذونات والصلاحيات</h2>
-          </div>
-          <label className="mb-1.5 block text-xs text-slate-400">الحزمة المستهدفة</label>
+        {/* Permissions */}
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="mb-2 font-semibold">الأذونات</h2>
+          <label className="mb-1 block text-xs text-muted-foreground">الحزمة المستهدفة</label>
           <input
             value={selectedPkg}
             onChange={(e) => setSelectedPkg(e.target.value)}
             placeholder="com.example.app"
-            className="mb-3 w-full rounded-xl border border-slate-800 bg-[#070d1e] px-3 py-2 font-mono text-xs text-slate-200"
+            className="mb-2 w-full rounded-md border border-input bg-background px-2 py-1.5 font-mono text-xs"
           />
-          <label className="mb-1.5 block text-xs text-slate-400 font-medium">نوع الإذن المخصص</label>
+          <label className="mb-1 block text-xs text-muted-foreground">الإذن</label>
           <select
             value={permission}
             onChange={(e) => setPermission(e.target.value)}
-            className="mb-3 w-full rounded-xl border border-slate-800 bg-[#070d1e] p-2 text-xs text-slate-200"
+            className="mb-2 w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs"
           >
             {COMMON_PERMISSIONS.map((p) => (
               <option key={p} value={p}>
@@ -478,153 +426,108 @@ function HomePage() {
           <input
             value={permission}
             onChange={(e) => setPermission(e.target.value)}
-            className="mb-4 w-full rounded-xl border border-slate-800 bg-[#070d1e] px-3 py-2 font-mono text-xs text-slate-300"
+            className="mb-2 w-full rounded-md border border-input bg-background px-2 py-1.5 font-mono text-xs"
           />
           <div className="flex gap-2">
             <button
               onClick={onGrant}
               disabled={!conn || !selectedPkg || busy}
-              className="flex-1 rounded-xl bg-[#2563eb] hover:bg-blue-600 px-4 py-2.5 text-xs font-bold text-white transition-colors disabled:opacity-50"
+              className="flex-1 rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              منح الإذن المخصص
+              منح
             </button>
             <button
               onClick={onRevoke}
               disabled={!conn || !selectedPkg || busy}
-              className="flex-1 rounded-xl border border-slate-800 hover:border-slate-700 bg-[#070d1e] px-4 py-2.5 text-xs font-bold text-slate-300 transition-colors disabled:opacity-50"
+              className="flex-1 rounded-md border border-input px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-50"
             >
-              سحب الإذن
+              سحب
             </button>
           </div>
           <button
             onClick={onGrantAll}
             disabled={!conn || !selectedPkg || busy}
-            className="mt-3 w-full rounded-xl bg-[#10b981] hover:bg-[#059669] px-4 py-3 text-xs font-bold text-slate-950 transition-colors disabled:opacity-50 shadow-lg shadow-[#10b981]/10"
+            className="mt-2 w-full rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
           >
             ⚡ منح جميع الأذونات دفعة واحدة
           </button>
-          <p className="mt-2 text-[10px] text-slate-500 text-center">
-            يقرأ الأذونات المطلوبة من manifest التطبيق ويمنحها تلقائياً للشاشة.
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            يقرأ الأذونات المطلوبة من manifest التطبيق ويمنحها كلها.
           </p>
         </section>
-               <section className="rounded-2xl border border-slate-800 bg-[#0b1329] p-5 shadow-xl lg:col-span-3">
-          <div className="mb-4 flex items-center justify-between flex-col sm:flex-row gap-3">
-            <div>
-              <h2 className="font-bold text-lg text-slate-200">📦 حزمة تطبيقاتك الخاصة</h2>
-              <p className="text-xs text-slate-400 mt-1">تثبيت سلس وتلقائي لعدة تطبيقات واحداً تلو الآخر</p>
-            </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <label className="flex-1 sm:flex-initial text-center cursor-pointer rounded-xl border border-slate-800 hover:border-slate-700 bg-[#070d1e] px-4 py-2 text-xs font-bold text-slate-300 transition-colors">
-                ➕ إضافة ملفات للـ Bundle
+
+        {/* App Bundle */}
+        <section className="rounded-lg border border-border bg-card p-4 lg:col-span-3">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-semibold">حزمة تطبيقات — تثبيت تلقائي</h2>
+            <div className="flex gap-2">
+              <label className="cursor-pointer rounded-md border border-input px-3 py-1.5 text-xs hover:bg-accent">
                 <input
                   type="file"
-                  accept=".apk"
+                  accept=".apk,application/vnd.android.package-archive"
                   multiple
                   className="hidden"
-                  onChange={(e) => onAddBundleFiles(e.target.files)}
+                  onChange={(e) => {
+                    onAddBundleFiles(e.target.files);
+                    e.currentTarget.value = "";
+                  }}
                 />
+                + إضافة APK للحزمة
               </label>
+              <button
+                onClick={() => setBundle([])}
+                disabled={bundle.length === 0 || bundleRunning}
+                className="rounded-md border border-input px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+              >
+                مسح
+              </button>
               <button
                 onClick={onInstallBundle}
                 disabled={!conn || bundle.length === 0 || bundleRunning}
-                className="flex-1 sm:flex-initial rounded-xl bg-[#10b981] hover:bg-[#059669] text-slate-950 px-5 py-2 text-xs font-bold disabled:opacity-40 transition-colors"
+                className="rounded-md bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
-                {bundleRunning ? "جاري التثبيت تلقائياً..." : "🚀 بدء تثبيت الحزمة"}
+                {bundleRunning ? "جاري التثبيت…" : `تثبيت الكل (${bundle.length})`}
               </button>
             </div>
           </div>
-
-          {bundle.length > 0 && (
-            <div className="max-h-40 overflow-y-auto space-y-1 rounded-xl bg-[#070d1e] p-3 border border-slate-800 font-mono text-xs">
-              {bundle.map((f, idx) => (
-                <div key={idx} className="flex justify-between text-slate-400 py-1 border-b border-slate-900 last:border-0">
-                  <span className="truncate">{f.name}</span>
-                  <span className="text-slate-600">{(f.size / 1024 / 1024).toFixed(2)} MB</span>
-                </div>
+          {bundle.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              أضف ملفات APK لتكوين حزمتك، ثم اضغط "تثبيت الكل" لتثبيتها واحداً تلو الآخر تلقائياً.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border rounded-md border border-border">
+              {bundle.map((f, i) => (
+                <li key={f.name + i} className="flex items-center justify-between px-3 py-2 text-xs">
+                  <span className="truncate font-mono">
+                    {i + 1}. {f.name}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span className="text-muted-foreground">
+                      {(f.size / 1024 / 1024).toFixed(1)}MB
+                    </span>
+                    <button
+                      onClick={() => setBundle((b) => b.filter((_, j) => j !== i))}
+                      disabled={bundleRunning}
+                      className="text-destructive hover:underline disabled:opacity-50"
+                    >
+                      حذف
+                    </button>
+                  </span>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </section>
 
-        {/* أدوات التحكم السريع للشاشات */}
-        <section className="rounded-2xl border border-slate-800 bg-[#0b1329] p-5 shadow-xl lg:col-span-3">
-          <h2 className="font-bold text-lg text-slate-200 mb-3">🛠️ اختصارات ذكية للسيارة</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <button
-              onClick={onGrantStoragePermission}
-              disabled={!conn}
-              className="rounded-xl border border-slate-800 bg-[#070d1e] hover:border-[#2563eb]/50 p-4 text-right transition-all disabled:opacity-40"
-            >
-              <h4 className="text-sm font-bold text-blue-400">🔓 منح صلاحيات الذاكرة فورا</h4>
-              <p className="text-xs text-slate-400 mt-1">تخطي قيود حظر قراءة الملفات والخرائط للتطبيق المحدد.</p>
-            </button>
-            <button
-              onClick={onForceStopLauncher}
-              disabled={!conn}
-              className="rounded-xl border border-slate-800 bg-[#070d1e] hover:border-rose-500/50 p-4 text-right transition-all disabled:opacity-40"
-            >
-             <h4 className="text-sm font-bold text-rose-400">🔄 إنعاش الواجهة (Force Stop Launcher)</h4>
-              <p className="text-xs text-slate-400 mt-1">إيقاف قسري للواجهة لإعادة تطبيق الثيمات أو الأيقونات الجديدة.</p>
-            </button>
-          </div>
-        </section>
 
-        {/* موجه الأوامر المخصص للـ Shell */}
-        <section className="rounded-2xl border border-slate-800 bg-[#0b1329] p-5 shadow-xl lg:col-span-3">
-          <h2 className="font-bold text-lg text-slate-200 mb-2">💻 موجه أوامر ADB Shell مخصص</h2>
+        {/* Custom shell */}
+        <section className="rounded-lg border border-border bg-card p-4 lg:col-span-3">
+          <h2 className="mb-2 font-semibold">أمر shell مخصص</h2>
           <div className="flex gap-2">
             <input
-              type="text"
-              placeholder="أدخل أمر shell مخصص هنا... (مثال: pm list packages)"
               value={customCmd}
               onChange={(e) => setCustomCmd(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && onRunCustom()}
-              className="flex-1 rounded-xl border border-slate-800 bg-[#070d1e] px-4 py-2.5 text-sm font-mono text-slate-200 focus:outline-none focus:border-[#10b981]/50"
-            />
-            <button
-              onClick={onRunCustom}
-              disabled={!conn || !customCmd.trim() || busy}
-              className="rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-2.5 text-sm font-bold text-white transition-colors disabled:opacity-40"
-            >
-              تشغيل الأمر
-            </button>
-          </div>
-        </section>
-
-      </main>
-
-      {/* قسم السجلات والـ Logs */}
-      <section className="mx-auto max-w-6xl px-4 mt-6">
-        <div className="rounded-2xl border border-slate-800 bg-[#070d1e] p-5 shadow-inner">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="font-bold text-sm text-slate-300">📟 وحدة التحكم والـ Logs للمطور</h3>
-            <button 
-              onClick={() => setLogs([])}
-              className="text-[10px] text-slate-500 hover:text-slate-300"
-            >
-              مسح السجل
-            </button>
-          </div>
-          <div 
-            ref={logRef}
-            className="h-48 overflow-y-auto rounded-xl bg-slate-950/90 p-4 font-mono text-xs space-y-1.5"
-          >
-            {logs.length === 0 ? (
-              <span className="text-slate-600">بانتظار توصيل شاشة السيارة عبر الـ USB لبدء رصد الأوامر...</span>
-            ) : (
-              logs.map((l, i) => (
-                <div key={i} className="flex gap-2">
-                  <span className="text-slate-600">[{l.time}]</span>
-                  <span className={l.kind === "err" ? "text-rose-400" : l.kind === "ok" ? "text-emerald-400" : "text-slate-300"}>
-                    {l.text}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
-
-    </div>
-  );
-}
+              placeholder="getprop ro.product.model"
+              className="flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
+   
