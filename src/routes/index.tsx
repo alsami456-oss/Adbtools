@@ -64,14 +64,17 @@ function HomePage() {
   const [bundleRunning, setBundleRunning] = useState(false);
   const [logs, setLogs] = useState<LogLine[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
+  // كود التمرير التلقائي لأسفل السجل عند إضافة أي log جديد
+useEffect(() => {
+  if (logRef.current) {
+    logRef.current.scrollTop = logRef.current.scrollHeight;
+  }
+}, [logs]); // يشتغل تلقائياً في كل مرة تتحدث فيها مصفوفة الـ logs
 
   useEffect(() => {
     setSupported(isWebUsbSupported());
   }, []);
 
-  useEffect(() => {
-    logRef.current?.scrollTo({ top: logRef.current.scrollHeight });
-  }, [logs]);
 
   const log = useCallback((text: string, kind: LogLine["kind"] = "info") => {
     const time = new Date().toLocaleTimeString("ar-EG", { hour12: false });
