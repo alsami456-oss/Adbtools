@@ -24,7 +24,7 @@ import {
   runShell,
   uninstallPackage,
   type AdbConnection,
-} from "@/lib/adb-client";
+} from "../lib/adb-client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
