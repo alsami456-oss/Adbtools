@@ -467,7 +467,7 @@ function HomePage() {
         {/* قسم إدارة أذونات النظام والأكواد */}
         <section className="rounded-2xl border border-slate-800 bg-[#0b1329] p-5 shadow-xl">
           <div className="flex items-center gap-2 mb-3 text-yellow-500">
-            <Settings className="w-5 h-5" />
+            <SettingsIcon className="w-5 h-5" />
             <h2 className="font-bold text-lg">الأذونات والصلاحيات</h2>
           </div>
           <label className="mb-1.5 block text-xs text-slate-400">الحزمة المستهدفة</label>
@@ -705,7 +705,7 @@ function HomePage() {
               rel="noopener noreferrer"
               className="flex items-center gap-2 bg-[#229ED9]/10 hover:bg-[#229ED9]/20 text-[#229ED9] border border-[#229ED9]/30 px-5 py-2.5 rounded-xl text-xs font-bold transition-all"
             >
-              <Send className="w-4 h-4" />
+              <TelegramIcon className="w-4 h-4" />
               قناتي على تيليجرام: SAM_T2
             </a>
 
