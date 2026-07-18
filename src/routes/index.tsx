@@ -25,8 +25,6 @@ import {
   Car,
   Loader2,
 } from "lucide-react";
-import {
-  COMMON_PERMISSIONS,
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
