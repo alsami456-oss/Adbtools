@@ -643,8 +643,8 @@ function HomePage() {
             )}
           </div>
         </section>
-
-        {/* SECTION 7: IMPORTANT USER MANUAL */}
+        
+                {/* SECTION 7: IMPORTANT USER MANUAL */}
         <section className="rounded-2xl border border-amber-500/10 bg-amber-500/5 p-5 lg:col-span-3 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xl">💡</span>
@@ -659,6 +659,7 @@ function HomePage() {
             <li>عند عملية الربط لأول مرة، ستظهر لك نافذة منبثقة تأكيدية على شاشة السيارة نصها <b className="text-gray-200">"Allow USB debugging?"</b>، يرجى الموافقة عليها ومنح الصلاحية دائماً لكي يستجيب معك النظام هنا.</li>
             <li>لمستخدمي أنظمة ويندوز (Windows): في حال تعذر لقط الجهاز، قد يتطلب الأمر تحديث أو تثبيت تعريفات <i className="text-cyan-400 font-mono">Google USB Driver</i> الرسمية أو تحويل الوصلة إلى WinUSB باستخدام أداة <b className="text-gray-200">Zadig</b> المشهورة ليظهر بنجاح داخل المتصفح.</li>
           </ol>
+        </section>
         </section>
       </main>
     </div>
