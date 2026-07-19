@@ -54,6 +54,9 @@ function HomePage() {
   const [logs, setLogs] = useState<LogLine[]>([]);
   const logRef = useRef<HTMLDivElement>(null);
 
+  // حقول خاصة بالأزرار الجديدة
+  const [appOpsPackage, setAppOpsPackage] = useState("");
+
   useEffect(() => {
     setSupported(isWebUsbSupported());
   }, []);
@@ -184,6 +187,55 @@ function HomePage() {
     }
   };
 
+  // دوال التعديل الروسي الجديدة لتعديل الشاشة ومنح صلاحيات التثبيت
+  const handleEnableFreeform = async () => {
+    if (!conn) return;
+    setBusy(true);
+    try {
+      log("جاري تفعيل ميزة النوافذ الحرة العائمة (Freeform Windows)... 🚀");
+      await runShell(conn.adb, "settings put global enable_freeform_support 1");
+      
+      log("جاري إجبار كافة التطبيقات على دعم تقسيم الشاشة (Force Resizable)... 📐");
+      await runShell(conn.adb, "settings put global force_resizable_activities 1");
+      
+      log("✅ تم التفعيل بنجاح! ينصح بإعادة تشغيل الشاشة الآن لتطبيق التغييرات.", "ok");
+    } catch (e) {
+      log(`❌ فشل التفعيل: ${(e as Error).message}`, "err");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleGrantAppOps = async () => {
+    const target = appOpsPackage.trim() || selectedPkg;
+    if (!conn || !target) {
+      log("⚠️ الرجاء اختيار حزمة من القائمة أو إدخال اسم الحزمة يدوياً.", "info");
+      return;
+    }
+    setBusy(true);
+    try {
+      log(`جاري منح صلاحيات تثبيت ملفات الـ APK والوصول الكامل للفلاشة للحزمة: ${target} ... 🔓`);
+      
+      // 1. صلاحية الوصول الكامل للملفات والفلاشة الخارجية
+      await runShell(conn.adb, `appops set ${target} MANAGE_EXTERNAL_STORAGE allow`);
+      log(`✓ تم منح صلاحية إدارة الملفات الخارجية (MANAGE_EXTERNAL_STORAGE)`, "ok");
+
+      // 2. صلاحية طلب تثبيت حزم وتطبيقات جديدة مباشرة
+      await runShell(conn.adb, `appops set ${target} REQUEST_INSTALL_PACKAGES allow`);
+      log(`✓ تم منح صلاحية تثبيت التطبيقات (REQUEST_INSTALL_PACKAGES)`, "ok");
+
+      // 3. صلاحية الظهور فوق التطبيقات الأخرى للعمل كنافذة عائمة
+      await runShell(conn.adb, `appops set ${target} SYSTEM_ALERT_WINDOW allow`);
+      log(`✓ تم منح صلاحية العرض فوق التطبيقات (SYSTEM_ALERT_WINDOW)`, "ok");
+
+      log(`🎉 تم الانتهاء بنجاح من إعداد الصلاحيات الروسية الكاملة للحزمة ${target}!`, "ok");
+    } catch (e) {
+      log(`❌ حدث خطأ أثناء منح الصلاحيات المتقدمة: ${(e as Error).message}`, "err");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const onAddBundleFiles = (files: FileList | null) => {
     if (!files) return;
     const apks = Array.from(files).filter((f) => f.name.toLowerCase().endsWith(".apk"));
@@ -258,7 +310,7 @@ function HomePage() {
   };
 
   const filteredPkgs = packages.filter((p) => p.includes(pkgSearch.toLowerCase()));
-    return (
+  return (
     <div dir="rtl" className="min-h-screen bg-[#070A13] text-[#E2E8F0] font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
       
       {/* HEADER SECTION */}
@@ -418,249 +470,3 @@ function HomePage() {
             />
             <span className="absolute left-3 top-2.5 text-xs opacity-40">🔍</span>
           </div>
-          
-          <select
-            size={6}
-            value={selectedPkg}
-            onChange={(e) => setSelectedPkg(e.target.value)}
-            className="w-full rounded-xl border border-[#1E293B] bg-[#0B0F19]/80 px-2 py-1 font-mono text-[11px] text-gray-300 focus:outline-none focus:border-blue-500/50 h-32 divide-y divide-gray-800/30"
-          >
-            {filteredPkgs.map((p) => (
-              <option key={p} value={p} className="py-1 px-1 rounded hover:bg-blue-500/10 cursor-pointer text-left" dir="ltr">
-                {p}
-              </option>
-            ))}
-          </select>
-          
-          <div className="mt-2.5 flex items-center justify-between text-[11px] text-gray-400 bg-[#0B0F19]/40 p-1.5 rounded-lg border border-gray-800/50">
-            <span>📊 حزم الفلتر الحالية:</span>
-            <span className="font-mono font-bold text-cyan-400">{filteredPkgs.length} / {packages.length}</span>
-          </div>
-          
-          <button
-            onClick={onUninstall}
-            disabled={!conn || !selectedPkg || busy}
-            className="mt-3 w-full rounded-xl bg-red-500/10 border border-red-500/20 py-2.5 text-xs font-black text-red-400 hover:bg-red-600 hover:text-white disabled:opacity-30 transition-all duration-200 shadow-md"
-          >
-            🗑️ إلغاء تثبيت الحزمة المحددة نهائياً
-          </button>
-        </section>
-
-        {/* SECTION 3: PERMISSIONS GRANTER */}
-        <section className="rounded-2xl border border-[#1E293B]/60 bg-[#111827]/60 backdrop-blur-xl p-5 shadow-lg relative overflow-hidden group hover:border-teal-500/30 transition-all duration-300">
-          <div className="absolute top-0 right-0 h-[2px] w-0 bg-teal-500 group-hover:w-full transition-all duration-500" />
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">🛡️</span>
-            <h2 className="font-extrabold text-gray-200 tracking-wide text-sm">أذونات النظام والتطبيقات</h2>
-          </div>
-          
-          <label className="mb-1 block text-[10px] font-bold text-gray-400 uppercase tracking-wider">الحزمة المستهدفة</label>
-          <input
-            value={selectedPkg}
-            onChange={(e) => setSelectedPkg(e.target.value)}
-            placeholder="com.example.app"
-            className="mb-2.5 w-full rounded-xl border border-[#1E293B] bg-[#0B0F19]/60 px-3 py-1.5 font-mono text-xs text-cyan-400 text-left"
-            dir="ltr"
-          />
-          
-          <label className="mb-1 block text-[10px] font-bold text-gray-400 uppercase tracking-wider">اختيار الإذن البرمجي</label>
-          <select
-            value={permission}
-            onChange={(e) => setPermission(e.target.value)}
-            className="mb-2 w-full rounded-xl border border-[#1E293B] bg-[#0B0F19]/60 px-2 py-2 text-xs text-gray-300 focus:outline-none"
-          >
-            {COMMON_PERMISSIONS.map((p) => (
-              <option key={p} value={p}>
-                {p.replace("android.permission.", "")}
-              </option>
-            ))}
-          </select>
-          
-          <input
-            value={permission}
-            onChange={(e) => setPermission(e.target.value)}
-            className="mb-3 w-full rounded-xl border border-[#1E293B] bg-[#0B0F19]/80 px-3 py-1.5 font-mono text-[11px] text-gray-400 text-left"
-            dir="ltr"
-          />
-          
-          <div className="flex gap-2">
-            <button
-              onClick={onGrant}
-              disabled={!conn || !selectedPkg || busy}
-              className="flex-1 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 px-4 py-2 text-xs font-black text-white hover:from-teal-400 hover:to-emerald-500 disabled:opacity-30 transition-all duration-200 shadow-sm"
-            >
-              ✓ منح الإذن
-            </button>
-            <button
-              onClick={onRevoke}
-              disabled={!conn || !selectedPkg || busy}
-              className="flex-1 rounded-xl border border-[#1E293B] bg-[#1F2937]/40 px-4 py-2 text-xs font-bold text-gray-300 hover:bg-gray-800 disabled:opacity-30 transition-all duration-200"
-            >
-              ✕ سحب الإذن
-            </button>
-          </div>
-          
-          <button
-            onClick={onGrantAll}
-            disabled={!conn || !selectedPkg || busy}
-            className="mt-3 w-full rounded-xl bg-gradient-to-r from-green-500 via-teal-500 to-emerald-600 py-2.5 text-xs font-black text-white hover:opacity-90 disabled:opacity-30 transition-all duration-200 shadow-[0_0_15px_rgba(16,185,129,0.2)] flex items-center justify-center gap-1.5"
-          >
-            ⚡ منح جميع الأذونات دفعة واحدة
-          </button>
-          <p className="mt-1.5 text-[10px] text-center text-gray-500 leading-normal">
-            يقوم بفحص الـ Manifest للتطبيق برمجياً ومنح كل الأذونات المطلوبة في ثوانٍ.
-          </p>
-        </section>
-
-        {/* SECTION 4: AUTOMATIC APP BUNDLE BATCH */}
-        <section className="rounded-2xl border border-[#1E293B]/60 bg-[#111827]/60 backdrop-blur-xl p-5 shadow-lg lg:col-span-3 relative overflow-hidden group hover:border-purple-500/20 transition-all duration-300">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🚀</span>
-              <div>
-                <h2 className="font-extrabold text-gray-200 text-sm">حزمة تطبيقات متكاملة — التثبيت المتسلسل التلقائي</h2>
-                <p className="text-[10px] text-gray-500 mt-0.5">قم بجدولة قائمة تطبيقات ليقوم النظام بتثبيتها واحداً تلو الآخر تلقائياً وبدون تدخل منك.</p>
-              </div>
-            </div>
-            
-            <div className="flex gap-1.5">
-              <label className="cursor-pointer rounded-xl border border-[#1E293B] bg-[#0B0F19]/60 px-3.5 py-2 text-xs font-bold text-gray-300 hover:bg-gray-800 transition-all flex items-center gap-1">
-                <input
-                  type="file"
-                  accept=".apk,application/vnd.android.package-archive"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => {
-                    onAddBundleFiles(e.target.files);
-                    e.currentTarget.value = "";
-                  }}
-                />
-                ➕ إضافة APK للحزمة
-              </label>
-              <button
-                onClick={() => setBundle([])}
-                disabled={bundle.length === 0 || bundleRunning}
-                className="rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs font-bold text-red-400 hover:bg-red-600 hover:text-white disabled:opacity-30 transition-all"
-              >
-                🧹 مسح
-              </button>
-              <button
-                onClick={onInstallBundle}
-                disabled={!conn || bundle.length === 0 || bundleRunning}
-                className="rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 px-4 py-2 text-xs font-black text-white hover:from-purple-400 hover:to-indigo-500 disabled:opacity-30 transition-all shadow-[0_0_15px_rgba(147,51,234,0.3)]"
-              >
-                {bundleRunning ? "⏳ جاري التثبيت المتسلسل…" : `▶ تشغيل وتثبيت الكل (${bundle.length})`}
-              </button>
-            </div>
-          </div>
-          
-          {bundle.length === 0 ? (
-            <div className="text-center py-6 border border-dashed border-gray-800 rounded-xl bg-[#0B0F19]/20 text-xs text-gray-500">
-               لا توجد ملفات مجدولة في الحزمة حالياً. أضف ملفات بالأعلى للبدء.
-            </div>
-          ) : (
-            <ul className="divide-y divide-gray-800/60 rounded-xl border border-gray-800 bg-[#0B0F19]/50 overflow-hidden">
-              {bundle.map((f, i) => (
-                <li key={f.name + i} className="flex items-center justify-between px-4 py-2.5 text-xs hover:bg-gray-800/20 transition-colors">
-                  <span className="truncate font-mono text-gray-300 flex items-center gap-1.5" dir="ltr">
-                    <span className="text-purple-400 font-bold">[{i + 1}]</span> {f.name}
-                  </span>
-                  <span className="flex items-center gap-3">
-                    <span className="text-[11px] font-mono text-gray-500 bg-gray-900 px-2 py-0.5 rounded border border-gray-800">
-                      {(f.size / 1024 / 1024).toFixed(1)} MB
-                    </span>
-                    <button
-                      onClick={() => setBundle((b) => b.filter((_, j) => j !== i))}
-                      disabled={bundleRunning}
-                      className="text-red-400 hover:text-red-500 font-bold hover:underline disabled:opacity-30"
-                    >
-                      حذف
-                    </button>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* SECTION 5: CUSTOM SHELL COMMANDS */}
-        <section className="rounded-2xl border border-[#1E293B]/60 bg-[#111827]/60 backdrop-blur-xl p-5 shadow-lg lg:col-span-3 relative overflow-hidden group hover:border-cyan-500/20 transition-all duration-300">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">💻</span>
-            <h2 className="font-extrabold text-gray-200 text-sm">منفذ أوامر Shell مخصص</h2>
-          </div>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <span className="absolute left-3 top-3 font-mono font-bold text-cyan-500 text-xs">$</span>
-              <input
-                value={customCmd}
-                onChange={(e) => setCustomCmd(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onRunCustom()}
-                placeholder="getprop ro.product.model"
-                className="w-full rounded-xl border border-[#1E293B] bg-[#0B0F19]/90 pl-3 pr-7 py-2.5 font-mono text-xs text-green-400 focus:outline-none focus:border-cyan-500/40"
-                dir="ltr"
-              />
-            </div>
-            <button
-              onClick={onRunCustom}
-              disabled={!conn || busy}
-              className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-xs font-black text-white hover:from-cyan-400 hover:to-blue-500 disabled:opacity-30 transition-all"
-            >
-              ⚙️ تنفيذ الأمر
-            </button>
-          </div>
-        </section>
-
-        {/* SECTION 6: SYSTEM LIVE LOGS */}
-        <section className="rounded-2xl border border-[#1E293B]/60 bg-[#111827]/60 backdrop-blur-xl p-5 shadow-lg lg:col-span-3 relative overflow-hidden">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">📋</span>
-            <h2 className="font-extrabold text-gray-200 text-sm">سجل العمليات المباشر (Console Logs)</h2>
-          </div>
-          <div
-            ref={logRef}
-            dir="ltr"
-            className="h-64 overflow-auto rounded-xl bg-[#070A13] p-3 font-mono text-[11px] text-gray-300 border border-gray-800 shadow-inner custom-scrollbar leading-relaxed"
-          >
-            {logs.length === 0 ? (
-              <div className="text-gray-600 italic flex items-center justify-center h-full">😴 لا توجد سجلات عمليات جارية حالياً، بانتظار اتصال الشاشة...</div>
-            ) : (
-              logs.map((l, i) => (
-                <div
-                  key={i}
-                  className={`py-0.5 border-b border-gray-900/40 transition-colors duration-150 hover:bg-gray-900/30 ${
-                    l.kind === "err"
-                      ? "text-rose-400 bg-rose-500/5 px-1 rounded"
-                      : l.kind === "ok"
-                        ? "text-emerald-400 bg-emerald-500/5 px-1 rounded"
-                        : "text-gray-300"
-                  }`}
-                >
-                  <span className="text-gray-500 font-semibold select-none">[{l.time}]</span>{" "}
-                  <span className="whitespace-pre-wrap">{l.text}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
-
-        {/* SECTION 7: IMPORTANT USER MANUAL */}
-        <section className="rounded-2xl border border-amber-500/10 bg-amber-500/5 p-5 lg:col-span-3 shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">💡</span>
-            <h2 className="font-extrabold text-amber-400 text-sm">تعليمات وإرشادات التشغيل الهامة</h2>
-          </div>
-          <ol className="list-inside list-decimal space-y-2 text-xs text-gray-400 leading-relaxed">
-            <li>يجب تصفح المنصة بشكل كامل عبر متصفحات <b className="text-gray-200">Chrome</b> أو <b className="text-gray-200">Edge</b> من خلال الكمبيوتر المكتبي أو المحمول (خاصية WebUSB غير مدعومة نهائياً على نظام iOS للهواتف).</li>
-            <li>
-              <b className="text-amber-400/90">إعداد الشاشة:</b> توجه لقائمة إعدادات شاشة السيارة/الجهاز، وقم بتفعيل خيارات المطور <b className="text-gray-200">Developer Options</b>، ثم تفعيل خيار تصحيح أخطاء USB المسمى <b className="text-gray-200">USB debugging</b>. في بعض شاشات سيارات الـ AAOS، قد تحتاج أيضاً لتفعيل خيار <b className="text-gray-200">ADB over USB</b> بشكل خاص.
-            </li>
-            <li>قم بتوصيل كابل نقل البيانات USB الأصلي بين الكمبيوتر والشاشة، ثم اضغط على زر <b className="text-cyan-400">"توصيل جهاز USB الشاشة"</b> بالأعلى واختر جهازك من القائمة المنبثقة.</li>
-            <li>عند عملية الربط لأول مرة، ستظهر لك نافذة منبثقة تأكيدية على شاشة السيارة نصها <b className="text-gray-200">"Allow USB debugging?"</b>، يرجى الموافقة عليها ومنح الصلاحية دائماً لكي يستجيب معك النظام هنا.</li>
-            <li>لمستخدمي أنظمة ويندوز (Windows): في حال تعذر لقط الجهاز، قد يتطلب الأمر تحديث أو تثبيت تعريفات <i className="text-cyan-400 font-mono">Google USB Driver</i> الرسمية أو تحويل الوصلة إلى WinUSB باستخدام أداة <b className="text-gray-200">Zadig</b> المشهورة ليظهر بنجاح داخل المتصفح.</li>
-          </ol>
-        </section>
-      </main>
-    </div>
-  );
-}
